@@ -500,6 +500,18 @@ DEVICE_ID=&lt;iphone-udid&gt; \
   function connect(url) {
     relay = String(url || "").trim().replace(/\/+$/, "");
     if (!relay) { setRelay("idle", "Paste the relay URL from the Android desk to connect."); return; }
+
+    // A browser refuses http:// requests from an https:// page (mixed content), and
+    // does it SILENTLY — the fetch just never resolves, which reads exactly like a
+    // dead relay. localhost/127.0.0.1 are exempt, so only a LAN or public http URL
+    // is affected. Say so plainly rather than letting it look like a tunnel fault.
+    if (location.protocol === "https:" && /^http:\/\//i.test(relay) &&
+        !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$|\/)/i.test(relay)) {
+      setRelay("down", "This page is HTTPS, so the browser will block a plain http:// relay. " +
+                       "Use the https:// tunnel URL (cloudflared gives one), or open this " +
+                       "dashboard from the relay itself.");
+      return;
+    }
     try { localStorage.setItem("medtalk.relay", relay); } catch (e) {}
     failStreak = 0; backoff = 2000;
     setRelay("retry", "Connecting to " + relay + " ...");
