@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2213%22>&#128222;</text></svg>">
+<title>MedTalk Call Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ground: #EDF1F0;
+    --surface: #FFFFFF;
+    --surface-2: #E3EAE8;
+    --line: #C9D5D2;
+    --line-soft: #DCE5E3;
+    --ink: #10201D;
+    --ink-2: #4A5F5B;
+    --ink-3: #758884;
+    --android: #2E7D4F;
+    --ios: #2C6FA8;
+    --ok: #2E7D4F;
+    --bad: #C0392B;
+    --warn: #96701A;
+    --idle: #8E9E9A;
+    --shadow: 0 1px 2px rgba(16,32,29,.07), 0 6px 18px rgba(16,32,29,.05);
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ground: #0F1416;
+      --surface: #171F20;
+      --surface-2: #1E2829;
+      --line: #2C393A;
+      --line-soft: #243031;
+      --ink: #E8F0EE;
+      --ink-2: #A3B5B1;
+      --ink-3: #748985;
+      --android: #7BC67E;
+      --ios: #6AA9E0;
+      --ok: #7BC67E;
+      --bad: #E5645A;
+      --warn: #D9A441;
+      --idle: #5C6E6B;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F1416;
+    --surface: #171F20;
+    --surface-2: #1E2829;
+    --line: #2C393A;
+    --line-soft: #243031;
+    --ink: #E8F0EE;
+    --ink-2: #A3B5B1;
+    --ink-3: #748985;
+    --android: #7BC67E;
+    --ios: #6AA9E0;
+    --ok: #7BC67E;
+    --bad: #E5645A;
+    --warn: #D9A441;
+    --idle: #5C6E6B;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; padding-left: 20px; padding-right: 20px; }
+
+  /* ---- masthead ---- */
+  header.top { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+  .brand h1 { font-size: 23px; font-weight: 700; letter-spacing: -.015em; margin: 0; text-wrap: balance; }
+  .brand p { margin: 5px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 60ch; }
+  .runpick { display: flex; align-items: center; gap: 9px; }
+  .runpick label { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  input[type="url"] {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 7px;
+    padding: 7px 11px; width: 248px; max-width: 46vw;
+  }
+  input[type="url"]:hover { border-color: var(--ink-3); }
+  .relaystat { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .relaystat .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  select, .btn {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 7px;
+    padding: 7px 11px; cursor: pointer;
+  }
+  .btn:hover, select:hover { border-color: var(--ink-3); }
+  :focus-visible { outline: 2px solid var(--ios); outline-offset: 2px; }
+
+  /* ---- verdict ---- */
+  .verdict { margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .verdict-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 16px 20px; border-bottom: 1px solid var(--line-soft); }
+  .vstat { font-family: var(--mono); font-size: 16px; font-weight: 600; letter-spacing: .06em; display: flex; align-items: center; gap: 9px; }
+  .vstat .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; flex: none; }
+  .vmeta { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .vmeta b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---- the four media paths ---- */
+  .paths { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1px; background: var(--line-soft); }
+  .path { background: var(--surface); padding: 15px 20px 17px; display: flex; flex-direction: column; gap: 9px; }
+  .path-h { display: flex; align-items: baseline; gap: 8px; font-size: 11px; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .arrow { font-family: var(--mono); color: var(--ink-3); }
+  .path-v { font-family: var(--mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .path-sub { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .bar { height: 3px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--idle); transition: width .5s ease, background-color .3s; }
+
+  /* ---- device columns ---- */
+  .decks { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; margin-top: 18px; }
+  .deck { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .deck-h { display: flex; align-items: center; gap: 10px; padding: 13px 17px; border-bottom: 1px solid var(--line-soft); }
+  .rail { width: 3px; align-self: stretch; border-radius: 2px; flex: none; }
+  .deck-h h2 { margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -.005em; }
+  .deck-h .who { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .pill { margin-left: auto; font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+
+  .link { display: flex; align-items: center; gap: 7px; padding: 8px 17px; font-family: var(--mono); font-size: 11.5px; border-bottom: 1px solid var(--line-soft); }
+  .link .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 1px; background: var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+  .fact { background: var(--surface); padding: 10px 14px 11px; }
+  .fact dt { font-size: 10px; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: 0; }
+  .fact dd { margin: 3px 0 0; font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  /* ---- phases ---- */
+  .phases { padding: 13px 17px; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--line-soft); }
+  .phase { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; }
+  .phase .mk { font-family: var(--mono); font-size: 11px; flex: none; width: 15px; text-align: center; line-height: 1.55; }
+  .phase .nm { color: var(--ink-2); }
+  .phase.done .nm { color: var(--ink); }
+  .phase .at { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex: none; }
+
+  /* ---- failure ---- */
+  .fail { margin: 0; padding: 12px 17px; background: color-mix(in srgb, var(--bad) 9%, var(--surface)); border-bottom: 1px solid var(--line-soft); }
+  .fail h3 { margin: 0 0 5px; font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--bad); font-weight: 700; }
+  .fail p { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere; }
+
+  /* ---- log ---- */
+  .logwrap { display: flex; flex-direction: column; min-height: 0; }
+  .logbar { display: flex; align-items: center; gap: 10px; padding: 9px 17px; }
+  .logbar span { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .logbar .btn { margin-left: auto; padding: 4px 9px; font-size: 11px; }
+  .log { margin: 0; padding: 0 17px 15px; font-family: var(--mono); font-size: 11.5px; line-height: 1.65; color: var(--ink-2); max-height: 260px; overflow: auto; overflow-wrap: anywhere; }
+  .log div { padding: 1px 0; }
+  .log .l-err { color: var(--bad); }
+  .log .l-warn { color: var(--warn); }
+  .log .l-ok { color: var(--ok); }
+  .log .t { color: var(--ink-3); }
+
+  .empty { padding: 26px 18px; text-align: center; color: var(--ink-3); font-size: 13px; }
+  .empty code { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); }
+
+  /* ---- how-to ---- */
+  .howto { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 20px; }
+  .howto h2 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: 0 0 12px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .card h3 { margin: 0 0 4px; font-size: 13.5px; font-weight: 600; }
+  .card p { margin: 0 0 9px; font-size: 12.5px; color: var(--ink-2); }
+  pre.cmd { margin: 0; background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 7px; padding: 10px 11px; font-family: var(--mono); font-size: 11px; line-height: 1.6; overflow-x: auto; color: var(--ink); }
+  .note { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); }
+  .note b { color: var(--ink-2); font-weight: 600; }
+
+  @media (max-width: 760px) {
+    .decks, .paths { grid-template-columns: 1fr; }
+    .vmeta { margin-left: 0; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>MedTalk Call Desk</h1>
+      <p>Live cross-platform call runs. Both machines report here, so a failure on the far device is readable from either desk.</p>
+    </div>
+    <div class="runpick">
+      <label for="relayurl">Relay</label>
+      <input id="relayurl" type="url" placeholder="https://xxx.trycloudflare.com" autocomplete="off" spellcheck="false">
+      <button class="btn" id="connect" type="button">Connect</button>
+      <label for="runsel">Run</label>
+      <select id="runsel"><option>—</option></select>
+    </div>
+  </header>
+
+  <div class="relaystat" id="relaystat" style="margin-top:12px;color:var(--idle)">
+    <span class="dot"></span><span id="relaytxt">Paste the relay URL from the Android desk to connect.</span>
+  </div>
+
+  <section class="verdict" aria-labelledby="vh">
+    <div class="verdict-head">
+      <div class="vstat" id="vstat" style="color:var(--idle)"><span class="dot"></span><span id="vh">NO RUNS YET</span></div>
+      <div class="vmeta" id="vmeta"><span>Start a run and it appears here within seconds.</span></div>
+    </div>
+    <div class="paths" id="paths"></div>
+  </section>
+
+  <div class="decks" id="decks"></div>
+
+  <section class="howto">
+    <h2>Running a pair</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Android desk</h3>
+        <p>Starts the relay, then the Android half. Keep the tunnel URL — it changes on every restart.</p>
+<pre class="cmd">MEDTALK_RELAY_TOKEN=&lt;secret&gt; \
+  python3 scripts/medtalk-relay-server.py
+
+cloudflared tunnel --url http://localhost:8787
+
+RUN_ID=run1 RELAY_URL=&lt;url&gt; \
+MEDTALK_RELAY_TOKEN=&lt;secret&gt; \
+  scripts/medtalk-remote-android.sh</pre>
+      </div>
+      <div class="card">
+        <h3>iPhone desk</h3>
+        <p>Same <code>RUN_ID</code> and <code>RELAY_URL</code>, exactly. Find the udid with <code>xcrun xctrace list devices</code>.</p>
+<pre class="cmd">RUN_ID=run1 RELAY_URL=&lt;url&gt; \
+MEDTALK_RELAY_TOKEN=&lt;secret&gt; \
+DEVICE_ID=&lt;iphone-udid&gt; \
+  scripts/medtalk-remote-ios.sh</pre>
+      </div>
+      <div class="card">
+        <h3>Reading a red run</h3>
+        <p>A rendezvous timeout names the <b>healthy</b> device — the side that timed out was working. Read the other column first.</p>
+        <p style="margin:0">Exit 2 is infrastructure (device or relay gone), never a product defect.</p>
+      </div>
+    </div>
+    <p class="note"><b>Direction is not a free choice.</b> Solo is patient-dials-only, so whoever dials is the patient — <code>a2i</code> has Android as patient, <code>i2a</code> swaps both roles. These are real, billed calls.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PATHS = [
+    { k: "a2i_video", t: "Android -> iOS", s: "video", unit: "frames", good: 30 },
+    { k: "i2a_video", t: "iOS -> Android", s: "video", unit: "frames", good: 30 },
+    { k: "a2i_audio", t: "Android -> iOS", s: "audio", unit: "bytes", good: 1 },
+    { k: "i2a_audio", t: "iOS -> Android", s: "audio", unit: "bytes", good: 1 }
+  ];
+  var PHASES = [
+    ["installed", "APK / build installed"],
+    ["logged-in", "Signed in, MedTalk open"],
+    ["ready", "Published ready"],
+    ["call-placed", "Call placed"],
+    ["connected", "Call connected"],
+    ["media", "Media asserted"],
+    ["ended", "Hung up"]
+  ];
+
+  var runs = [], current = null, follow = {}, relay = "", token = "";
+  var pollTimer = null, relayState = "idle", failStreak = 0, backoff = 2000;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+  var num = function (v) { return typeof v === "number" && isFinite(v) ? v : null; };
+  var fmt = function (n) { return n == null ? "--" : n.toLocaleString("en-US"); };
+  var clock = function (ts) {
+    if (!ts) return "";
+    var d = new Date(ts);
+    return isNaN(d) ? "" : d.toLocaleTimeString("en-US", { hour12: false });
+  };
+
+  // A side is LIVE only while its heartbeat is recent. Without this a run whose
+  // process died mid-call keeps reading "RUNNING" forever, which is the single
+  // most misleading state this page could show.
+  var STALE_MS = 45000;
+
+  function ageMs(ts) {
+    if (!ts) return null;
+    var t = new Date(ts).getTime();
+    return isNaN(t) ? null : Date.now() - t;
+  }
+
+  function liveness(d) {
+    var st = String((d && d.status) || "idle").toLowerCase();
+    if (st === "pass" || st === "fail" || st === "infra") return { live: null, st: st };
+    var a = ageMs(d && (d.heartbeatAt || d.updatedAt));
+    if (a === null) return { live: null, st: st };
+    return { live: a < STALE_MS, st: st, age: a };
+  }
+
+  function sides(run) {
+    var d = (run && run.devices) || {};
+    return { android: d.android || {}, ios: d.ios || {} };
+  }
+
+  function statusOf(run) {
+    if (!run) return { label: "NO RUNS YET", color: "var(--idle)" };
+    var s = String(run.status || "running").toLowerCase();
+    if (s === "pass") return { label: "PASS", color: "var(--ok)" };
+    if (s === "fail") return { label: "FAIL", color: "var(--bad)" };
+    if (s === "infra") return { label: "INFRASTRUCTURE", color: "var(--warn)" };
+    var sd = sides(run), la = liveness(sd.android), li = liveness(sd.ios);
+    var anyLive = la.live === true || li.live === true;
+    var anyStale = la.live === false || li.live === false;
+    if (anyStale && !anyLive) return { label: "LOST CONTACT", color: "var(--bad)" };
+    if (anyStale) return { label: "ONE SIDE STALLED", color: "var(--warn)" };
+    return { label: "RUNNING", color: "var(--ios)" };
+  }
+
+  // Counters may be reported by either side; prefer whichever published one.
+  function counter(run, key) {
+    var s = sides(run);
+    var v = num((s.android.media || {})[key]);
+    if (v === null) v = num((s.ios.media || {})[key]);
+    return v;
+  }
+
+  function renderPaths(run) {
+    $("paths").innerHTML = PATHS.map(function (p) {
+      var v = counter(run, p.k);
+      var first = counter(run, p.k + "_first");
+      var advanced = v !== null && first !== null ? v > first : null;
+      var col = "var(--idle)", sub = "not measured yet";
+      if (v !== null) {
+        // Advancing matters as much as the total: a frozen keyframe satisfies > 0.
+        var ok = v >= p.good && (advanced === null ? true : advanced);
+        col = ok ? "var(--ok)" : "var(--bad)";
+        sub = first !== null ? fmt(first) + " -> " + fmt(v) + " " + p.unit : fmt(v) + " " + p.unit;
+        if (advanced === false) sub += " | not advancing";
+      }
+      var pct = v === null ? 0 : Math.max(6, Math.min(100, Math.round((v / (p.good * 6)) * 100)));
+      return '<div class="path">' +
+        '<div class="path-h"><span>' + esc(p.s) + '</span><span class="arrow">' + esc(p.t) + '</span></div>' +
+        '<div class="path-v" style="color:' + col + '">' + (v === null ? "--" : fmt(v)) + '</div>' +
+        '<div class="bar"><i style="width:' + pct + '%;background:' + col + '"></i></div>' +
+        '<div class="path-sub">' + esc(sub) + '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function renderDeck(id, title, who, accent, d, run) {
+    var st = String(d.status || (run ? "running" : "idle")).toLowerCase();
+    var pc = st === "pass" ? "var(--ok)" : st === "fail" ? "var(--bad)"
+           : st === "infra" ? "var(--warn)" : st === "running" ? "var(--ios)" : "var(--idle)";
+
+    var lv = liveness(d), link;
+    if (lv.live === true) link = { txt: "reporting | " + Math.round(lv.age / 1000) + "s ago", col: "var(--ok)" };
+    else if (lv.live === false) link = { txt: "no heartbeat for " + Math.round(lv.age / 1000) + "s", col: "var(--bad)" };
+    else if (st === "pass" || st === "fail" || st === "infra") link = { txt: "run finished", col: "var(--ink-3)" };
+    else link = { txt: "never reported", col: "var(--idle)" };
+
+    var media = d.media || {}, reached = d.phases || {};
+    var facts = [
+      ["Role", d.role || "--"],
+      ["Device", d.device || "--"],
+      ["Inbound video", media.in_frames != null ? fmt(num(media.in_frames)) : "--"],
+      ["Inbound audio", media.in_audio_bytes != null ? fmt(num(media.in_audio_bytes)) : "--"]
+    ].map(function (f) {
+      return '<div class="fact"><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
+    }).join("");
+
+    var phases = PHASES.map(function (p) {
+      var hit = reached[p[0]];
+      var done = !!hit;
+      var bad = hit && String(hit).indexOf("fail") === 0;
+      var col = bad ? "var(--bad)" : done ? "var(--ok)" : "var(--idle)";
+      var at = done && typeof hit === "string" && hit.length > 4 ? clock(hit) : "";
+      return '<div class="phase' + (done ? " done" : "") + '">' +
+        '<span class="mk" style="color:' + col + '">' + (bad ? "\u2715" : done ? "\u2713" : "\u00b7") + '</span>' +
+        '<span class="nm">' + esc(p[1]) + '</span>' +
+        (at ? '<span class="at">' + esc(at) + "</span>" : "") + "</div>";
+    }).join("");
+
+    var failure = d.failure ? '<div class="fail"><h3>Failure</h3><p>' + esc(d.failure) + "</p></div>" : "";
+
+    var lines = Array.isArray(d.log) ? d.log : [];
+    var log = lines.length ? lines.slice(-400).map(function (l) {
+      var text = typeof l === "string" ? l : (l && l.text) || "";
+      var t = typeof l === "object" && l ? clock(l.at) : "";
+      var cls = /\b(FAIL|ERROR|EACCES|Exception|refused|denied|INFRASTRUCTURE)\b/i.test(text) ? "l-err"
+              : /\b(WARN|timeout|retry|skipped|stalled)\b/i.test(text) ? "l-warn"
+              : /(\bPASS\b|OK \(|connected|granted)/i.test(text) ? "l-ok" : "";
+      return '<div class="' + cls + '">' + (t ? '<span class="t">' + esc(t) + "</span> " : "") + esc(text) + "</div>";
+    }).join("") : '<div class="t">No output yet.</div>';
+
+    return '<section class="deck">' +
+      '<div class="deck-h"><span class="rail" style="background:' + accent + '"></span>' +
+        "<div><h2>" + esc(title) + '</h2><div class="who">' + esc(who) + "</div></div>" +
+        '<span class="pill" style="color:' + pc + '">' + esc(st) + "</span></div>" +
+      '<div class="link" style="color:' + link.col + '"><span class="dot"></span>' + esc(link.txt) + "</div>" +
+      '<dl class="facts">' + facts + "</dl>" +
+      '<div class="phases">' + phases + "</div>" + failure +
+      '<div class="logwrap"><div class="logbar"><span>Output</span>' +
+        '<button class="btn" type="button" data-copy="' + id + '">Copy</button></div>' +
+        '<pre class="log" id="log-' + id + '">' + log + "</pre></div></section>";
+  }
+
+  function render() {
+    var run = current, s = statusOf(run);
+    $("vstat").style.color = s.color;
+    $("vh").textContent = s.label;
+
+    var meta = [];
+    if (run) {
+      if (run.id) meta.push("<b>run</b> " + esc(run.id));
+      if (run.direction) meta.push("<b>dir</b> " + esc(run.direction));
+      if (run.environment) meta.push("<b>env</b> " + esc(run.environment));
+      if (run.startedAt) meta.push("<b>started</b> " + esc(clock(run.startedAt)));
+      if (run.updatedAt) meta.push("<b>updated</b> " + esc(clock(run.updatedAt)));
+    } else {
+      meta.push(relayState === "ok" ? "Connected. Start a run and it appears here."
+                                    : "Connect to the relay to see runs.");
+    }
+    $("vmeta").innerHTML = meta.map(function (m) { return "<span>" + m + "</span>"; }).join("");
+
+    renderPaths(run);
+    var sd = sides(run);
+    $("decks").innerHTML =
+      renderDeck("android", "Android", "this desk | adb device", "var(--android)", sd.android, run) +
+      renderDeck("ios", "iPhone", "remote desk | physical device", "var(--ios)", sd.ios, run);
+
+    ["android", "ios"].forEach(function (k) {
+      var el = $("log-" + k);
+      if (!el) return;
+      if (follow[k] !== false) el.scrollTop = el.scrollHeight;
+      el.addEventListener("scroll", function () {
+        follow[k] = el.scrollTop + el.clientHeight >= el.scrollHeight - 24;
+      });
+    });
+  }
+
+  function setRelay(state, msg) {
+    relayState = state;
+    var col = state === "ok" ? "var(--ok)" : state === "retry" ? "var(--warn)"
+            : state === "down" ? "var(--bad)" : "var(--idle)";
+    $("relaystat").style.color = col;
+    $("relaytxt").textContent = msg;
+  }
+
+  function fillSelect() {
+    var sel = $("runsel");
+    if (!runs.length) { sel.innerHTML = "<option>no runs yet</option>"; return; }
+    var keep = sel.value;
+    sel.innerHTML = runs.map(function (r) {
+      return '<option value="' + esc(r.id) + '">' + esc(r.id) + " | " +
+             esc(String(r.status || "running").toUpperCase()) + "</option>";
+    }).join("");
+    if (runs.some(function (r) { return r.id === keep; })) sel.value = keep;
+  }
+
+  // One poll: the relay is the live source, and its reachability IS the
+  // connection check. Failures back off rather than hammering a dead tunnel,
+  // and recovery is automatic — no reload, no button.
+  function poll() {
+    if (!relay) return;
+    var url = relay + "/runs";
+    fetch(url, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (data) {
+      failStreak = 0; backoff = 2000;
+      runs = (data && data.runs) || [];
+      fillSelect();
+      var want = $("runsel").value;
+      current = runs.filter(function (r) { return r.id === want; })[0] || runs[0] || null;
+      if (current && $("runsel").value !== current.id) $("runsel").value = current.id;
+      setRelay("ok", "Relay connected | " + runs.length + " run" + (runs.length === 1 ? "" : "s") +
+                     " | refreshed " + new Date().toLocaleTimeString("en-US", { hour12: false }));
+      render();
+      schedule(2000);
+    }).catch(function (e) {
+      failStreak++;
+      // Keep the last good data on screen; say plainly that it is now stale.
+      if (failStreak < 3) {
+        setRelay("retry", "Relay not answering (attempt " + failStreak + ") — retrying...");
+      } else {
+        setRelay("down", "Relay unreachable: " + (e && e.message ? e.message : "no response") +
+                         ". Check the tunnel is still up — its URL changes on every restart.");
+      }
+      render();
+      backoff = Math.min(backoff * 1.6, 15000);
+      schedule(backoff);
+    });
+  }
+
+  function schedule(ms) {
+    if (pollTimer) clearTimeout(pollTimer);
+    pollTimer = setTimeout(poll, ms);
+  }
+
+  function connect(url) {
+    relay = String(url || "").trim().replace(/\/+$/, "");
+    if (!relay) { setRelay("idle", "Paste the relay URL from the Android desk to connect."); return; }
+    try { localStorage.setItem("medtalk.relay", relay); } catch (e) {}
+    failStreak = 0; backoff = 2000;
+    setRelay("retry", "Connecting to " + relay + " ...");
+    schedule(0);
+  }
+
+  $("connect").addEventListener("click", function () { connect($("relayurl").value); });
+  $("relayurl").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") connect($("relayurl").value);
+  });
+  $("runsel").addEventListener("change", function () {
+    current = runs.filter(function (r) { return r.id === this.value; }.bind(this))[0] || null;
+    render();
+  });
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-copy]");
+    if (!b) return;
+    var el = $("log-" + b.getAttribute("data-copy"));
+    if (!el || !navigator.clipboard) return;
+    navigator.clipboard.writeText(el.textContent).then(function () {
+      var was = b.textContent; b.textContent = "Copied";
+      setTimeout(function () { b.textContent = was; }, 1400);
+    });
+  });
+
+  render();
+  // Liveness is time-derived, so it must be recomputed even when no data arrives —
+  // exactly the case where a side has gone silent.
+  setInterval(function () { if (current) render(); }, 5000);
+
+  // Relay URL, in order of preference:
+  //   1. ?relay= in the link  (how the Android desk shares a ready-to-use URL)
+  //   2. this page's own origin, when the relay is serving the page itself
+  //   3. whatever this browser used last
+  (function boot() {
+    var fromQuery = new URLSearchParams(location.search).get("relay");
+    var saved = null;
+    try { saved = localStorage.getItem("medtalk.relay"); } catch (e) {}
+
+    // Served BY the relay? Then its own origin is the relay, and nothing needs typing.
+    // A file:// or github.io origin is not a relay, so those fall through.
+    var selfHosted = /^https?:$/.test(location.protocol) &&
+                     !/github\.io$/i.test(location.hostname) &&
+                     location.pathname.replace(/index\.html$/, "") === "/";
+
+    var pick = fromQuery || (selfHosted ? location.origin : null) || saved;
+    if (pick) { $("relayurl").value = pick; connect(pick); }
+  })();
+
+})();
+</script>
+
+</body>
+</html>
